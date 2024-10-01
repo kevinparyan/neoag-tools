@@ -253,6 +253,10 @@ def chain_mnps(cl, pos, df, mnp_dict, g, chrom, t_reads, n_reads):
         maf_idx = maf_idx.union(df.loc[pos[i], 'maf_idx'])
         # this can handle existing DNP, TNP, ONP
         alt_base = df.loc[pos[i], 'Tumor_Seq_Allele']
+        print(f"alt slice: {alt[posr[i]:posr[i]+len(alt_base)]}")
+        print(f"alt_base: {list(alt_base)}")
+        print(f"Start position: {df.loc[pos[i], 'Start_position']}")
+        #print(f"posr[i]: {posr[i]}")
         alt[posr[i]:posr[i]+len(alt_base)] = list(alt_base)
         t_alt_count.append(t_reads[pos[i]]['alt'])
         t_ref_count.append(t_reads[pos[i]]['ref'])
