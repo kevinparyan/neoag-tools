@@ -254,9 +254,10 @@ def chain_mnps(cl, pos, df, mnp_dict, g, chrom, t_reads, n_reads):
         # this can handle existing DNP, TNP, ONP
         alt_base = df.loc[pos[i], 'Tumor_Seq_Allele']
         try:
-            print(f"alt slice: {alt[posr[i]:posr[i]+len(alt_base)]}")
-            print(f"alt_base: {list(alt_base)}")
-            print(f"Start position: {df.loc[pos[i], 'Start_position']}")
+            # uncomment for debugging purposes
+            #print(f"alt slice: {alt[posr[i]:posr[i]+len(alt_base)]}")
+            #print(f"alt_base: {list(alt_base)}")
+            #print(f"Start position: {df.loc[pos[i], 'Start_position']}")
             alt[posr[i]:posr[i]+len(alt_base)] = list(alt_base)
         except Exception as e:
             logging.info(f"Skipped iteration for pos {pos[i]}: alt_base={alt_base}, "

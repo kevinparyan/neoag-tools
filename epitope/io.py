@@ -80,9 +80,10 @@ common_header = ['transcript_id',
 def read_maf(maf, name, name_col):
     if maf == None:
         return pd.DataFrame()
-
+    print(f"reading MAF: {maf}")
     # reading MAF in a primivie way to handle commend characters '#'
     # in the middle of the line which pd.read_csv couldn't handle
+    # if Start_Position or End_Position are __UNKNOWN__ skip the line
     header = []
     record = []
     for line in open(maf):
@@ -91,6 +92,18 @@ def read_maf(maf, name, name_col):
         line = line.rstrip('\n').split('\t')
         if line[0] == 'Hugo_Symbol':
             header = line
+            start_index = None
+            end_index = None
+            for index, item in enumerate(line):
+                if item == 'Start_Position' or item == 'Start_position':
+                    start_index = index
+                    break
+            for index, item in enumerate(line):
+                if item == 'End_Position' or item == 'End_position':
+                    end_index = index
+                    break
+        elif line[start_index] == '__UNKNOWN__' or line[end_index] == '__UNKNOWN__':
+            continue
         else:
             record.append({h:x for h,x in zip(header,line)})
     df = pd.DataFrame(data=record, dtype=str)
@@ -122,9 +135,21 @@ def read_maf(maf, name, name_col):
         if oc in df:
             maf_cols[oc] = optional_cols[oc]
     try:
-        df = df[maf_cols.keys()].astype(maf_cols)
+        # uncomment for troubleshooting purposes
+        #ls = [type(item) for item in maf_cols]
+        #print(f"maf_cols.keys(): {maf_cols.keys()}")
+        #print(f"maf_cols: {maf_cols}")
+        #print(f"df cols dtypes: {df.dtypes}")
+        #print(f"maf_cols types: {ls}")
+    # Iterate through columns individually to allow us to catch specific issues if they arise
+        for col in maf_cols.keys():
+            print(f"Converting column: {col} to type: {maf_cols[col]}")
+            df[col] = df[col].astype(maf_cols[col])
+
     except Exception as e:
-            raise KeyError(str(e).replace('index', 'MAF'))
+        # Print which column caused the error and provide a descriptive message
+        problematic_col = col  # Capture the last column being processed
+        raise KeyError(f"Error converting column '{problematic_col}' - {str(e).replace('index', 'MAF')}")
 
     # process clone information if supplied
     if 'ClonalStructure' in df:
