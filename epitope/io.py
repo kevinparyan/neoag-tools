@@ -84,6 +84,7 @@ def read_maf(maf, name, name_col):
     # reading MAF in a primivie way to handle commend characters '#'
     # in the middle of the line which pd.read_csv couldn't handle
     # if Start_Position or End_Position are __UNKNOWN__ skip the line
+    print("trying to implement fix for empty Start_position or end_position")
     header = []
     record = []
     for line in open(maf):
@@ -103,6 +104,12 @@ def read_maf(maf, name, name_col):
                     end_index = index
                     break
         elif line[start_index] == '__UNKNOWN__' or line[start_index] == '' or line[end_index] == '__UNKNOWN__' or line[end_index] == '':
+            continue
+        elif not line[start_index]:
+            print(f"start position empty: {line[start_index]}")
+            continue
+        elif not line[end_index]:
+            print(f"end position empty: {line[end_index}")
             continue
         else:
             record.append({h:x for h,x in zip(header,line)})
