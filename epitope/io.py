@@ -102,7 +102,7 @@ def read_maf(maf, name, name_col):
                 if item == 'End_Position' or item == 'End_position':
                     end_index = index
                     break
-        elif line[start_index] == '__UNKNOWN__' or line[end_index] == '__UNKNOWN__':
+        elif line[start_index] == '__UNKNOWN__' or line[start_index] == '' or line[end_index] == '__UNKNOWN__' or line[end_index] == '':
             continue
         else:
             record.append({h:x for h,x in zip(header,line)})
