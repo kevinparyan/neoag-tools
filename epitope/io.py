@@ -109,7 +109,7 @@ def read_maf(maf, name, name_col):
             print(f"start position empty: {line[start_index]}")
             continue
         elif not line[end_index]:
-            print(f"end position empty: {line[end_index}")
+            print(f"end position empty: {line[end_index]}")
             continue
         else:
             record.append({h:x for h,x in zip(header,line)})
