@@ -103,7 +103,7 @@ def read_maf(maf, name, name_col):
                 if item == 'End_Position' or item == 'End_position':
                     end_index = index
                     break
-        elif line[start_index] == '__UNKNOWN__' or line[start_index] == '' or line[end_index] == '__UNKNOWN__' or line[end_index] == '':
+        if line[start_index] == '__UNKNOWN__' or line[end_index] == '__UNKNOWN__':
             continue
         elif not line[start_index]:
             print(f"start position empty: {line[start_index]}")
