@@ -129,13 +129,23 @@ def read_maf(maf, name, name_col):
         df.rename(columns={'Start_Position':'Start_position'}, inplace=True)
     if 'End_Position' in df:
         df.rename(columns={'End_Position':'End_position'}, inplace=True)
-
+ 
     # format MAF columns
     if 'PhaseID' in df:
         df.loc[df['PhaseID'].isin(['nan','']), 'PhaseID'] = np.nan
     if 'GermlineID' in df:
         df.loc[df['GermlineID'].isin(['nan','']), 'GermlineID'] = np.nan
-        
+    
+    # delete duplicate column occurrences
+    cols_for_dups = pd.Series(df.columns)
+    duplicates = cols_for_dups[cols_for_dups.duplicated()].unique()
+
+    # Iterate through each duplicate column and drop the second occurrence
+    for col in duplicates:
+        first_idx = df.columns.get_loc(col)
+        # Drop all occurrences except the first
+        df = df.loc[:, ~((df.columns == col) & (df.columns.duplicated(keep='first')))]
+
     # subset MAF columns
     maf_cols = required_cols.copy()
     for oc in optional_cols:
