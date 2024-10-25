@@ -105,12 +105,12 @@ def read_maf(maf, name, name_col):
                     break
         if line[start_index] == '__UNKNOWN__' or line[end_index] == '__UNKNOWN__':
             continue
-        elif not line[start_index]:
-            print(f"start position empty: {line[start_index]}")
-            continue
-        elif not line[end_index]:
-            print(f"end position empty: {line[end_index]}")
-            continue
+        #elif not line[start_index]:
+        #    print(f"start position empty: {line[start_index]}")
+        #    continue
+        #elif not line[end_index]:
+        #    print(f"end position empty: {line[end_index]}")
+        #    continue
         else:
             record.append({h:x for h,x in zip(header,line)})
     df = pd.DataFrame(data=record, dtype=str)
@@ -137,14 +137,14 @@ def read_maf(maf, name, name_col):
         df.loc[df['GermlineID'].isin(['nan','']), 'GermlineID'] = np.nan
     
     # delete duplicate column occurrences
-    cols_for_dups = pd.Series(df.columns)
-    duplicates = cols_for_dups[cols_for_dups.duplicated()].unique()
+    #cols_for_dups = pd.Series(df.columns)
+    #duplicates = cols_for_dups[cols_for_dups.duplicated()].unique()
 
     # Iterate through each duplicate column and drop the second occurrence
-    for col in duplicates:
-        first_idx = df.columns.get_loc(col)
+    #for col in duplicates:
+    #    first_idx = df.columns.get_loc(col)
         # Drop all occurrences except the first
-        df = df.loc[:, ~((df.columns == col) & (df.columns.duplicated(keep='first')))]
+    #    df = df.loc[:, ~((df.columns == col) & (df.columns.duplicated(keep='first')))]
 
     # subset MAF columns
     maf_cols = required_cols.copy()
