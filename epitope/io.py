@@ -129,23 +129,18 @@ def read_maf(maf, name, name_col):
         df.rename(columns={'Start_Position':'Start_position'}, inplace=True)
     if 'End_Position' in df:
         df.rename(columns={'End_Position':'End_position'}, inplace=True)
- 
+    # Convert Start_position and End_position to numeric, handling errors
+    for col in ['Start_position', 'End_position']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            df.dropna(subset=[col], inplace=True)  # Drop rows with NaN in critical position columns
+
     # format MAF columns
     if 'PhaseID' in df:
         df.loc[df['PhaseID'].isin(['nan','']), 'PhaseID'] = np.nan
     if 'GermlineID' in df:
         df.loc[df['GermlineID'].isin(['nan','']), 'GermlineID'] = np.nan
     
-    # delete duplicate column occurrences
-    #cols_for_dups = pd.Series(df.columns)
-    #duplicates = cols_for_dups[cols_for_dups.duplicated()].unique()
-
-    # Iterate through each duplicate column and drop the second occurrence
-    #for col in duplicates:
-    #    first_idx = df.columns.get_loc(col)
-        # Drop all occurrences except the first
-    #    df = df.loc[:, ~((df.columns == col) & (df.columns.duplicated(keep='first')))]
-
     # subset MAF columns
     maf_cols = required_cols.copy()
     for oc in optional_cols:
@@ -164,6 +159,7 @@ def read_maf(maf, name, name_col):
             df[col] = df[col].astype(maf_cols[col])
 
     except Exception as e:
+        print(df[col])
         # Print which column caused the error and provide a descriptive message
         problematic_col = col  # Capture the last column being processed
         raise KeyError(f"Error converting column '{problematic_col}' - {str(e).replace('index', 'MAF')}")
