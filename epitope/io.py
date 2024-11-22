@@ -84,7 +84,6 @@ def read_maf(maf, name, name_col):
     # reading MAF in a primivie way to handle commend characters '#'
     # in the middle of the line which pd.read_csv couldn't handle
     # if Start_Position or End_Position are __UNKNOWN__ skip the line
-    print("trying to implement fix for empty Start_position or end_position")
     header = []
     record = []
     for line in open(maf):
@@ -103,14 +102,8 @@ def read_maf(maf, name, name_col):
                 if item == 'End_Position' or item == 'End_position':
                     end_index = index
                     break
-        if line[start_index] == '__UNKNOWN__' or line[end_index] == '__UNKNOWN__':
+        elif line[start_index] == '__UNKNOWN__' or line[start_index] == '' or line[end_index] == '__UNKNOWN__' or line[end_index] == '':
             continue
-        #elif not line[start_index]:
-        #    print(f"start position empty: {line[start_index]}")
-        #    continue
-        #elif not line[end_index]:
-        #    print(f"end position empty: {line[end_index]}")
-        #    continue
         else:
             record.append({h:x for h,x in zip(header,line)})
     df = pd.DataFrame(data=record, dtype=str)
@@ -129,18 +122,13 @@ def read_maf(maf, name, name_col):
         df.rename(columns={'Start_Position':'Start_position'}, inplace=True)
     if 'End_Position' in df:
         df.rename(columns={'End_Position':'End_position'}, inplace=True)
-    # Convert Start_position and End_position to numeric, handling errors
-    for col in ['Start_position', 'End_position']:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-            df.dropna(subset=[col], inplace=True)  # Drop rows with NaN in critical position columns
 
     # format MAF columns
     if 'PhaseID' in df:
         df.loc[df['PhaseID'].isin(['nan','']), 'PhaseID'] = np.nan
     if 'GermlineID' in df:
         df.loc[df['GermlineID'].isin(['nan','']), 'GermlineID'] = np.nan
-    
+        
     # subset MAF columns
     maf_cols = required_cols.copy()
     for oc in optional_cols:
@@ -159,7 +147,6 @@ def read_maf(maf, name, name_col):
             df[col] = df[col].astype(maf_cols[col])
 
     except Exception as e:
-        print(df[col])
         # Print which column caused the error and provide a descriptive message
         problematic_col = col  # Capture the last column being processed
         raise KeyError(f"Error converting column '{problematic_col}' - {str(e).replace('index', 'MAF')}")
