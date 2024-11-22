@@ -168,6 +168,7 @@ RSEM gene expression matrix can be supplied to attach TPM information.
 #### Peptide lengths
 
 Only lengths 8, 9, 10, and 11 are supported.
+Note: in this branch (add_12mer), support for 12mers is being added.
 
 #### Codon table
 
