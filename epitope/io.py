@@ -264,12 +264,17 @@ def write_fasta(fo, tumor_name, normal_name, muts, gmuts,
 
 def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
                   name, txid, gnid, tpm, flen, pep_lens):
+    print("transcript...")
+    print(txid)
     flank_length = flen+max(pep_lens)-1
     for index, m in smuts.iterrows():
         start, end = idx[index]
         start = start - start%3 + 1
         end = (end-1) - (end-1)%3 + 1
-        
+        print("start...")
+        print(start)
+        print("end...")
+        print(end)
         # adjust reading frame for shifted amino acid mismatches
         for i in range(start,len(mstr),3):
             if mstr[i] == '*':
