@@ -29,7 +29,7 @@ RUN apt-get update && \
 # Clone neoantigen phasing and translation tools
 #RUN git clone https://github.com/jnktsj/neoag-tools.git && \
 #    mv neoag-tools main && pip3 install -r /root/main/requirements.txt
-RUN git clone -b debug-write-peptide https://github.com/kevinparyan/neoag-tools.git && \
+RUN git clone -b debug-write-peptide-12mer https://github.com/kevinparyan/neoag-tools.git && \
     mv neoag-tools main && pip3 install -r /root/main/requirements.txt
 
 # Deleting unneeded caches

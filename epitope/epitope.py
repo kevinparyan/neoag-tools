@@ -63,7 +63,7 @@ def check_input_args(args):
     for p in args.peptide_length.split(','):
         try:
             pep_len = int(p)
-            if pep_len not in [8, 9, 10, 11]:
+            if pep_len not in [8, 9, 10, 11, 12]:
                 raise ValueError('invalid peptide length: {} ({})'.format(p, args.peptide_length))
         except ValueError:
             raise ValueError('invalid peptide length: {} ({})'.format(p, args.peptide_length))
