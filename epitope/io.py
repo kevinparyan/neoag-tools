@@ -2,7 +2,7 @@ import os
 import re
 import gzip
 from collections import OrderedDict
-
+import warnings
 import numpy as np
 import pandas as pd
 
@@ -262,92 +262,292 @@ def write_fasta(fo, tumor_name, normal_name, muts, gmuts,
     fo.write(exon_str+'\n')
 
 
+#def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
+#                  name, txid, gnid, tpm, flen, pep_lens):
+#    flank_length = flen+max(pep_lens)-1
+#    # --- Early check for empty mstr ---
+#    if not mstr:
+#        warnings.warn(f"Skipping peptides for {name}/{clone} - mstr is empty.")
+#        return # Exit the function if mstr is empty
+#    mstr_len = len(mstr)
+#    for index, m in smuts.iterrows():
+#        try: # Add a try block for unexpected issues within the loop iteration
+#
+#		start, end = idx[index]
+#		start = start - start%3 + 1
+#		end = (end-1) - (end-1)%3 + 1
+#	 # --- Check original coordinates from idx ---
+#                if start >= mstr_len or end > mstr_len or start < 0 or end <= 0:
+#                    warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
+#                               f"Initial coordinates ({orig_start}, {orig_end}) out of bounds for mstr length {mstr_len}.")
+#                continue # Skip to the next mutation in the loop	
+#		# adjust reading frame for shifted amino acid mismatches
+#		for i in range(start,len(mstr),3):
+#                    if i >= mstr_len: break
+#		    if mstr[i] == '*':
+#			start = i
+#			break
+#		for i in range(end,start-3,-3):
+#                    # Check 'i' validity
+#                    if i >= mstr_len or i < 0 : continue # Skip invalid index within loop
+#		    if mstr[i] == '*':
+#			end = i
+#		# --- Final check on start/end after potential modification by loops ---
+#                if start >= mstr_len or end >= mstr_len or start < 0 or end < 0 or end < start : # Check if end is before start
+#                    warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
+#                               f"Final coordinates after stop search ({start}, {end}) are invalid or out of order for mstr length {mstr_len}.")
+#                    continue # Skip to the next mutation
+#
+#		if m['Variant_Classification'].startswith('Frame_Shift'):
+#		    wt_aa = unpad_peptide(wt.aa[start:])
+#		    mt_aa = unpad_peptide(mt.aa[start:])
+#		    # make wild type sequence same length as mutated sequence
+#		    wt_aa += '-'*(len(mt_aa)-len(wt_aa))
+#		    wt_aa = wt_aa[:len(mt_aa)]
+#		    mt_aa_dn = ''
+#		    wt_aa_dn = ''
+#		elif m['Variant_Classification'].startswith('Nonstop_Mutation'):
+#		    mt_aa = unpad_peptide(mt.aa[start:])
+#		    wt_aa = '-'*len(mt_aa)
+#		    mt_aa_dn = ''
+#		    wt_aa_dn = ''            
+#		else:
+#		    wt_aa = unpad_peptide(wt.aa[start:end+1])
+#		    mt_aa = unpad_peptide(mt.aa[start:end+1])
+#		    mt_aa_dn = unpad_peptide(mt.aa[(end+3):])
+#		    wt_aa_dn = unpad_peptide(wt.aa[(end+3):])
+#		    
+#		    # trim downstream sequence with specified flanking peptide length
+#		    mt_aa_dn = mt_aa_dn[:flank_length] + '-'*(flank_length-len(mt_aa_dn))
+#		    wt_aa_dn = wt_aa_dn[:flank_length] + '-'*(flank_length-len(wt_aa_dn))
+#
+#		mt_aa_up = unpad_peptide(mt.aa[:start])
+#		wt_aa_up = unpad_peptide(wt.aa[:start])
+#
+#		# mutated protein sequence coordinates
+#		aa_start = len(mt_aa_up) + 1
+#		aa_stop = aa_start + len(mt_aa) - 1
+#
+#		# trim upstream sequence with specified flanking peptide length
+#		mt_aa_up = '-'*(flank_length-len(mt_aa_up)) + mt_aa_up[-flank_length:]
+#		wt_aa_up = '-'*(flank_length-len(wt_aa_up)) + wt_aa_up[-flank_length:]
+#		
+#		start = len(mt_aa_up)
+#		stop = start + len(mt_aa)
+#		
+#		wt_aa = wt_aa_up + wt_aa + wt_aa_dn
+#		mt_aa = mt_aa_up + mt_aa + mt_aa_dn
+#		for plen in pep_lens:
+#		    for i in range(start-plen+1, stop):
+#			pep_wt = wt_aa[i:i+plen]
+#			pep = mt_aa[i:i+plen]
+#			if len(pep) < plen:
+#			    continue
+#			elif '-' in pep:
+#			    continue
+#			elif pep == pep_wt:
+#			    continue
+#			ctex_up = mt_aa[i-flen:i]
+#			ctex_dn = mt_aa[i+plen:i+plen+flen]
+#			ctex_dn += '-'*(flen-len(ctex_dn))
+#			fo.write('\t'.join([
+#			    m['Hugo_Symbol'],
+#			    pep_wt, pep, ctex_up, ctex_dn,
+#			    str(aa_start),
+#			    str(aa_stop),
+#			    txid, gnid, tpm, name, clone,
+#			    m['Chromosome'],
+#			    str(m['Start_position']),
+#			    str(m['End_position']),
+#			    m['Variant_Classification'],
+#			    m['Variant_Type'],
+#			    m['Genome_Change'],
+#			    m['cDNA_Change'],
+#			    m['Codon_Change'],
+#			    m['Protein_Change'],
+#			])+'\n')
+#    except IndexError as e:
+#        warnings.warn(f"Caught IndexError processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: {e}. Skipping.")
+#        continue # Skip to next mutation on unexpected index error
+#    except KeyError as e:
+#        warnings.warn(f"Caught KeyError processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: Missing key {e}. Skipping.")
+#        continue # Skip to next mutation if a key is missing from 'm' or 'idx'
+#    except Exception as e:
+#        warnings.warn(f"Caught unexpected Exception processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: {type(e).__name__} - {e}. Skipping.")
+#        continue # Skip on any other error for this mutation
+
 def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
                   name, txid, gnid, tpm, flen, pep_lens):
-    flank_length = flen+max(pep_lens)-1
+    flank_length = flen + max(pep_lens) - 1
+
+    # --- Early check for empty mstr ---
+    if not mstr:
+        warnings.warn(f"Skipping peptides for {name}/{clone} - mstr is empty.")
+        return # Exit the function if mstr is empty
+
+    mstr_len = len(mstr) # Store length for efficiency
+
     for index, m in smuts.iterrows():
-        start, end = idx[index]
-        start = start - start%3 + 1
-        end = (end-1) - (end-1)%3 + 1
-        
-        # adjust reading frame for shifted amino acid mismatches
-        for i in range(start,len(mstr),3):
-            if mstr[i] == '*':
-                start = i
-                break
-        for i in range(end,start-3,-3):
-            if mstr[i] == '*':
-                end = i
-        
-        if m['Variant_Classification'].startswith('Frame_Shift'):
-            wt_aa = unpad_peptide(wt.aa[start:])
-            mt_aa = unpad_peptide(mt.aa[start:])
-            # make wild type sequence same length as mutated sequence
-            wt_aa += '-'*(len(mt_aa)-len(wt_aa))
-            wt_aa = wt_aa[:len(mt_aa)]
-            mt_aa_dn = ''
-            wt_aa_dn = ''
-        elif m['Variant_Classification'].startswith('Nonstop_Mutation'):
-            mt_aa = unpad_peptide(mt.aa[start:])
-            wt_aa = '-'*len(mt_aa)
-            mt_aa_dn = ''
-            wt_aa_dn = ''            
-        else:
-            wt_aa = unpad_peptide(wt.aa[start:end+1])
-            mt_aa = unpad_peptide(mt.aa[start:end+1])
-            mt_aa_dn = unpad_peptide(mt.aa[(end+3):])
-            wt_aa_dn = unpad_peptide(wt.aa[(end+3):])
-            
-            # trim downstream sequence with specified flanking peptide length
-            mt_aa_dn = mt_aa_dn[:flank_length] + '-'*(flank_length-len(mt_aa_dn))
-            wt_aa_dn = wt_aa_dn[:flank_length] + '-'*(flank_length-len(wt_aa_dn))
+        try: # Add a try block for unexpected issues within the loop iteration
+            orig_start, orig_end = idx[index] # Get original values first
 
-        mt_aa_up = unpad_peptide(mt.aa[:start])
-        wt_aa_up = unpad_peptide(wt.aa[:start])
+            # --- Check original coordinates from idx ---
+            if orig_start >= mstr_len or orig_end > mstr_len or orig_start < 0 or orig_end <= 0:
+                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
+                               f"Initial coordinates ({orig_start}, {orig_end}) out of bounds for mstr length {mstr_len}.")
+                 continue # Skip to the next mutation in the loop
 
-        # mutated protein sequence coordinates
-        aa_start = len(mt_aa_up) + 1
-        aa_stop = aa_start + len(mt_aa) - 1
+            start = orig_start - orig_start % 3 + 1
+            end = (orig_end - 1) - (orig_end - 1) % 3 + 1
 
-        # trim upstream sequence with specified flanking peptide length
-        mt_aa_up = '-'*(flank_length-len(mt_aa_up)) + mt_aa_up[-flank_length:]
-        wt_aa_up = '-'*(flank_length-len(wt_aa_up)) + wt_aa_up[-flank_length:]
-        
-        start = len(mt_aa_up)
-        stop = start + len(mt_aa)
-        
-        wt_aa = wt_aa_up + wt_aa + wt_aa_dn
-        mt_aa = mt_aa_up + mt_aa + mt_aa_dn
-        for plen in pep_lens:
-            for i in range(start-plen+1, stop):
-                pep_wt = wt_aa[i:i+plen]
-                pep = mt_aa[i:i+plen]
-                if len(pep) < plen:
-                    continue
-                elif '-' in pep:
-                    continue
-                elif pep == pep_wt:
-                    continue
-                ctex_up = mt_aa[i-flen:i]
-                ctex_dn = mt_aa[i+plen:i+plen+flen]
-                ctex_dn += '-'*(flen-len(ctex_dn))
-                fo.write('\t'.join([
-                    m['Hugo_Symbol'],
-                    pep_wt, pep, ctex_up, ctex_dn,
-                    str(aa_start),
-                    str(aa_stop),
-                    txid, gnid, tpm, name, clone,
-                    m['Chromosome'],
-                    str(m['Start_position']),
-                    str(m['End_position']),
-                    m['Variant_Classification'],
-                    m['Variant_Type'],
-                    m['Genome_Change'],
-                    m['cDNA_Change'],
-                    m['Codon_Change'],
-                    m['Protein_Change'],
-                ])+'\n')
+            # --- Check coordinates AFTER modulo adjustment ---
+            # Ensure start and end point within or at the boundaries validly
+            if start >= mstr_len or end >= mstr_len or start < 0 or end < 0:
+                warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
+                              f"Adjusted coordinates ({start}, {end}) out of bounds for mstr length {mstr_len}.")
+                continue # Skip to the next mutation
 
+            # --- Clamp end to be within bounds if necessary for range start ---
+            # The range function itself handles the upper bound, but ensure the start of the range is valid.
+            safe_end_for_loop2 = min(end, mstr_len - 1)
+
+            # --- Find first stop codon after start ---
+            # Make sure the loop doesn't start out of bounds
+            first_stop_found = False
+            if start < mstr_len:
+                 for i in range(start, mstr_len, 3):
+                     # Check 'i' itself just in case, although range should handle it
+                     if i >= mstr_len: break
+                     if mstr[i] == '*':
+                         start = i # Update start to the stop codon position
+                         first_stop_found = True
+                         break
+
+            # --- Find last stop codon before the (potentially updated) start ---
+            # Make sure the loop doesn't start out of bounds
+            last_stop_found = False
+            # Ensure start index for range() is not negative
+            if safe_end_for_loop2 >= 0:
+                # Iterate down to index 0. The stop parameter is exclusive.
+                for i in range(safe_end_for_loop2, start - 3, -3):
+                    # Check 'i' validity
+                    if i >= mstr_len or i < 0 : continue # Skip invalid index within loop
+                    if mstr[i] == '*':
+                        end = i # Update end to the stop codon position
+                        last_stop_found = True
+                        # NOTE: This loop finds the LAST stop codon before start.
+                        # Depending on logic, maybe you only wanted the FIRST one counting down?
+                        # If so, add 'break' here. Assuming current logic is correct.
+
+            # --- Final check on start/end after potential modification by loops ---
+            if start >= mstr_len or end >= mstr_len or start < 0 or end < 0 or end < start : # Check if end is before start
+                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
+                               f"Final coordinates after stop search ({start}, {end}) are invalid or out of order for mstr length {mstr_len}.")
+                 continue # Skip to the next mutation
+
+
+            # --- REST OF YOUR ORIGINAL CODE FOR PROCESSING ---
+            # (Variant Classification checks, slicing, writing)
+
+            if m['Variant_Classification'].startswith('Frame_Shift'):
+                # Ensure slices use the potentially updated start/end
+                wt_aa = unpad_peptide(wt.aa[start:])
+                mt_aa = unpad_peptide(mt.aa[start:])
+                # make wild type sequence same length as mutated sequence
+                wt_aa += '-'*(len(mt_aa)-len(wt_aa))
+                wt_aa = wt_aa[:len(mt_aa)]
+                mt_aa_dn = ''
+                wt_aa_dn = ''
+            elif m['Variant_Classification'].startswith('Nonstop_Mutation'):
+                mt_aa = unpad_peptide(mt.aa[start:])
+                wt_aa = '-'*len(mt_aa)
+                mt_aa_dn = ''
+                wt_aa_dn = ''
+            else:
+                # Check slice boundaries carefully based on updated start/end
+                slice_end = min(end + 1, len(wt.aa)) # Ensure slice end is valid
+                slice_end_plus_3 = min(end + 3, len(wt.aa))
+
+                wt_aa = unpad_peptide(wt.aa[start:slice_end])
+                mt_aa = unpad_peptide(mt.aa[start:slice_end])
+                mt_aa_dn = unpad_peptide(mt.aa[slice_end_plus_3:]) # Use end+3 adjusted
+                wt_aa_dn = unpad_peptide(wt.aa[slice_end_plus_3:]) # Use end+3 adjusted
+
+                # trim downstream sequence with specified flanking peptide length
+                mt_aa_dn = mt_aa_dn[:flank_length] + '-'*(flank_length-len(mt_aa_dn))
+                wt_aa_dn = wt_aa_dn[:flank_length] + '-'*(flank_length-len(wt_aa_dn))
+
+            # Ensure slice boundary is valid
+            slice_start = min(start, len(mt.aa))
+            mt_aa_up = unpad_peptide(mt.aa[:slice_start])
+            wt_aa_up = unpad_peptide(wt.aa[:slice_start])
+
+
+            # mutated protein sequence coordinates
+            aa_start = len(mt_aa_up) + 1
+            aa_stop = aa_start + len(mt_aa) - 1
+
+            # trim upstream sequence with specified flanking peptide length
+            mt_aa_up = '-'*(flank_length-len(mt_aa_up)) + mt_aa_up[-flank_length:]
+            wt_aa_up = '-'*(flank_length-len(wt_aa_up)) + wt_aa_up[-flank_length:]
+
+            start_offset = len(mt_aa_up) # Renaming 'start' used for slicing loops
+            stop_offset = start_offset + len(mt_aa) # Renaming 'stop' used for slicing loops
+
+            wt_aa_full = wt_aa_up + wt_aa + wt_aa_dn # Renamed variable
+            mt_aa_full = mt_aa_up + mt_aa + mt_aa_dn # Renamed variable
+
+            for plen in pep_lens:
+                # Adjust loop range based on renamed variables
+                for i in range(start_offset - plen + 1, stop_offset):
+                    if i < 0: continue # Prevent negative index slicing
+                    pep_wt = wt_aa_full[i : i + plen]
+                    pep = mt_aa_full[i : i + plen]
+                    if len(pep) < plen:
+                        continue
+                    elif '-' in pep:
+                        continue
+                    # Small optimization: check identity only if lengths match expected plen
+                    elif len(pep_wt) == plen and pep == pep_wt:
+                         continue
+
+                    # Context slicing bounds checks
+                    ctex_up_start = max(0, i - flen)
+                    ctex_dn_end = min(len(mt_aa_full), i + plen + flen)
+
+                    ctex_up = mt_aa_full[ctex_up_start : i]
+                    ctex_dn = mt_aa_full[i + plen : ctex_dn_end]
+                    ctex_dn += '-'*(flen-len(ctex_dn))
+
+                    # Ensure all required fields exist in 'm' before writing
+                    required_fields = ['Hugo_Symbol', 'Chromosome', 'Start_position', 'End_position',
+                                     'Variant_Classification', 'Variant_Type', 'Genome_Change',
+                                     'cDNA_Change', 'Codon_Change', 'Protein_Change']
+                    if not all(field in m for field in required_fields):
+                        warnings.warn(f"Skipping write for mutation index {index} due to missing fields.")
+                        continue # Skip writing if data is incomplete
+
+                    fo.write('\t'.join([
+                        str(m['Hugo_Symbol']), # Ensure strings
+                        str(pep_wt), str(pep), str(ctex_up), str(ctex_dn),
+                        str(aa_start), str(aa_stop),
+                        str(txid), str(gnid), str(tpm), str(name), str(clone),
+                        str(m['Chromosome']),
+                        str(m['Start_position']), str(m['End_position']),
+                        str(m['Variant_Classification']), str(m['Variant_Type']),
+                        str(m['Genome_Change']), str(m['cDNA_Change']),
+                        str(m['Codon_Change']), str(m['Protein_Change']),
+                    ])+'\n')
+
+        except IndexError as e:
+             warnings.warn(f"Caught IndexError processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: {e}. Skipping.")
+             continue # Skip to next mutation on unexpected index error
+        except KeyError as e:
+             warnings.warn(f"Caught KeyError processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: Missing key {e}. Skipping.")
+             continue # Skip to next mutation if a key is missing from 'm' or 'idx'
+        except Exception as e:
+             warnings.warn(f"Caught unexpected Exception processing mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: {type(e).__name__} - {e}. Skipping.")
+             continue # Skip on any other error for this mutation
 
 def write_neoorf(fo, smuts, clone, wt, mt, mstr, idx, name, txid, gnid, tpm):
     for index, m in smuts.iterrows():
