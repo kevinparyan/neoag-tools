@@ -403,8 +403,8 @@ def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
             # --- Check coordinates AFTER modulo adjustment ---
             # Ensure start and end point within or at the boundaries validly
             if start >= mstr_len or end >= mstr_len or start < 0 or end < 0:
-                warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
-                              f"Adjusted coordinates ({start}, {end}) out of bounds for mstr length {mstr_len}.")
+                warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: ")
+                warnings.warn(f"Adjusted coordinates ({start}, {end}) out of bounds for mstr length {mstr_len}.")
                 continue # Skip to the next mutation
 
             # --- Clamp end to be within bounds if necessary for range start ---
@@ -441,8 +441,8 @@ def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
 
             # --- Final check on start/end after potential modification by loops ---
             if start >= mstr_len or end >= mstr_len or start < 0 or end < 0 or end < start : # Check if end is before start
-                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: "
-                              f"Final coordinates after stop search ({start}, {end}) are invalid or out of order for mstr length {mstr_len}.")
+                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone}: ")
+                 warnings.warn(f"Final coordinates after stop search ({start}, {end}) are invalid or out of order for mstr length {mstr_len}.")
                  continue # Skip to the next mutation
 
 
