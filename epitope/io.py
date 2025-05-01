@@ -403,7 +403,7 @@ def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
             # --- Check coordinates AFTER modulo adjustment ---
             # Ensure start and end point within or at the boundaries validly
             if start >= mstr_len or end >= mstr_len or start < 0 or end < 0:
-                warnings.warn(f"Skipping peptide for mutation {m.get('Protein_Change', 'N/A')} in {name}/{clone} transcript ID {txid}, Hugo Symbol {m.get('Hugo_Symbol', 'N/A')}, Variant_Classification {m.get('Variant_Classification', 'N/A'): "
+                warnings.warn(f"Skipping peptide for mutation {m.get('Protein_Change', 'N/A')} in {name}/{clone} transcript ID {txid}, Hugo Symbol {m.get('Hugo_Symbol', 'N/A')}, Variant_Classification {m.get('Variant_Classification', 'N/A')}: "
                               f"Adjusted coordinates ({start}, {end}) out of bounds for mstr length {mstr_len}.")
                 continue # Skip to the next mutation
 
@@ -441,7 +441,7 @@ def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
 
             # --- Final check on start/end after potential modification by loops ---
             if start >= mstr_len or end >= mstr_len or start < 0 or end < 0 or end < start : # Check if end is before start
-                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone} transcript ID {txid}, Hugo Symbol {m.get('Hugo_Symbol', 'N/A')}, Variant_Classification {m.get('Variant_Classification', 'N/A'): ")
+                 warnings.warn(f"Skipping peptide for mutation index {index} ({m.get('Protein_Change', 'N/A')}) in {name}/{clone} transcript ID {txid}, Hugo Symbol {m.get('Hugo_Symbol', 'N/A')}, Variant_Classification {m.get('Variant_Classification', 'N/A')}: ")
                  warnings.warn(f"Final coordinates after stop search ({start}, {end}) are invalid or out of order for mstr length {mstr_len}.")
                  continue # Skip to the next mutation
 
