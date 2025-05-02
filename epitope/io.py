@@ -273,7 +273,7 @@ def write_peptide(fo, smuts, clone, wt, mt, mstr, idx,
         # ensure i does not exceed the length of mstr, skip to next iteration if it does
         if start >= mstr_len or end >= mstr_len:
             warnings.warn(f"Skipping peptide for mutation {m.get('Protein_Change', 'N/A')} in {name}/{clone} transcript ID {txid}, Hugo Symbol {m.get('Hugo_Symbol', 'N/A')}, Variant_Classification {m.get('Variant_Classification', 'N/A')} : "
-                          f"Coordinates ({orig_start}, {orig_end}) out of bounds for mstr length {mstr_len}.")
+                          f"Coordinates ({start}, {end}) out of bounds for mstr length {mstr_len}.")
             continue
         # adjust reading frame for shifted amino acid mismatches
         for i in range(start,len(mstr),3):
